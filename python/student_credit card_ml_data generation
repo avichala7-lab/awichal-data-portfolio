@@ -1,0 +1,80 @@
+import pandas as pd
+import numpy as np
+import random
+
+def generate_student_data(num_samples=50000, seed=42):
+    np.random.seed(seed)
+    random.seed(seed)
+
+    data = {
+        'student_id': range(1, num_samples + 1),
+        'age': np.random.randint(18, 26, num_samples),
+        'year_in_school': np.random.choice(['Freshman', 'Sophomore', 'Junior', 'Senior', 'Grad'], num_samples, p=[0.25, 0.25, 0.2, 0.2, 0.1]),
+        'major': np.random.choice(['STEM', 'Business', 'Arts', 'Humanities', 'Social Sciences'], num_samples),
+        'gpa': np.round(np.random.uniform(2.0, 4.0, num_samples), 2),
+        'part_time_job': np.random.choice([0, 1], num_samples, p=[0.4, 0.6]), # 60% have jobs
+        'tuition_cost': np.random.choice([5000, 10000, 15000, 25000, 40000], num_samples), # Semester cost
+        'scholarship_amount': np.zeros(num_samples),
+        'bank_balance': np.round(np.random.exponential(1500, num_samples), 2),
+        'num_credit_inquiries': np.random.poisson(0.5, num_samples),
+    }
+
+    df = pd.DataFrame(data)
+
+    # Derived and correlated features
+    
+    # Income depends on part_time_job
+    df['monthly_income'] = df['part_time_job'] * np.random.normal(1200, 300, num_samples)
+    df['monthly_income'] = df['monthly_income'].clip(lower=0).round(2)
+    
+    # Scholarship depends loosely on GPA
+    df['scholarship_amount'] = df.apply(lambda x: np.random.choice([0, 2000, 5000, 10000]) if x['gpa'] > 3.5 else 0, axis=1)
+    
+    # Monthly spend depends on income + random noise (lifestyle)
+    # Some students spend more than they have (risk factor)
+    df['monthly_spend'] = df['monthly_income'] * np.random.uniform(0.5, 1.2, num_samples) + np.random.normal(300, 100, num_samples)
+    df['monthly_spend'] = df['monthly_spend'].clip(lower=100).round(2)
+
+    # Calculate Risk Score to determine Target
+    # Higher score = Higher risk of default
+    
+    # 1. Spending Ratio: Spend / (Income + Scholarship/6 + 1) -> +1 to avoid div by zero
+    # We assume scholarship is per semester (6 months)
+    effective_monthly_inflow = df['monthly_income'] + (df['scholarship_amount'] / 6)
+    df['spend_ratio'] = df['monthly_spend'] / (effective_monthly_inflow + 100) # +100 buffer
+    
+    # 2. GPA Factor: Lower GPA -> slightly higher risk (proxy for conscientiousness)
+    gpa_risk = (4.0 - df['gpa']) * 0.5
+    
+    # 3. Bank Balance Factor: Low balance -> higher risk
+    balance_risk = np.where(df['bank_balance'] < 500, 1.5, 0)
+    
+    # 4. Inquiries
+    inquiry_risk = df['num_credit_inquiries'] * 0.2
+    
+    # Total Risk Probability
+    base_default_rate = 0.05
+    risk_prob = base_default_rate + (df['spend_ratio'] * 0.2) + (gpa_risk * 0.1) + (balance_risk * 0.2) + (inquiry_risk * 0.1)
+    
+    # Add some random noise
+    risk_prob += np.random.normal(0, 0.05, num_samples)
+    
+    # Clip probability
+    risk_prob = risk_prob.clip(0, 1)
+    
+    # Generate Target
+    df['default_payment_next_month'] = np.random.binomial(1, risk_prob)
+    
+    # Drop helper columns if we want a clean raw dataset, but spend_ratio is useful for EDA. 
+    # Let's drop the explicit risk calculation columns to make it a ML problem
+    df.drop(columns=['spend_ratio'], inplace=True)
+    
+    print(f"Generated {num_samples} records.")
+    print(f"Default Rate: {df['default_payment_next_month'].mean():.2%}")
+    
+    return df
+
+if __name__ == "__main__":
+    df = generate_student_data()
+    df.to_csv('student_credit_data.csv', index=False)
+    print("Data saved to student_credit_data.csv")
