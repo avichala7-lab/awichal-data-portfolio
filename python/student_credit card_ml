@@ -1,0 +1,101 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, roc_auc_score, classification_report, confusion_matrix
+
+def train_and_evaluate():
+    # 1. Load Data
+    print("Loading data...")
+    df = pd.read_csv('student_credit_data.csv')
+    
+    # Quick EDA
+    print("\nData Overview:")
+    print(df.head())
+    print("\nTarget Distribution:")
+    print(df['default_payment_next_month'].value_counts(normalize=True))
+    
+    # 2. Preprocessing
+    X = df.drop(columns=['student_id', 'default_payment_next_month'])
+    y = df['default_payment_next_month']
+    
+    # Define categorical and numerical columns
+    categorical_cols = ['year_in_school', 'major']
+    numerical_cols = ['age', 'gpa', 'part_time_job', 'tuition_cost', 'scholarship_amount', 'bank_balance', 'num_credit_inquiries', 'monthly_income', 'monthly_spend']
+    
+    # Create transformers
+    numeric_transformer = StandardScaler()
+    categorical_transformer = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+    
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', numeric_transformer, numerical_cols),
+            ('cat', categorical_transformer, categorical_cols)
+        ]
+    )
+    
+    # Split data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+    
+    # 3. Train Logistic Regression (Baseline)
+    print("\nTraining Logistic Regression...")
+    lr_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
+                                  ('classifier', LogisticRegression(random_state=42))])
+    lr_pipeline.fit(X_train, y_train)
+    
+    y_pred_lr = lr_pipeline.predict(X_test)
+    y_prob_lr = lr_pipeline.predict_proba(X_test)[:, 1]
+    
+    print("Logistic Regression Results:")
+    print(f"Accuracy: {accuracy_score(y_test, y_pred_lr):.4f}")
+    print(f"ROC-AUC: {roc_auc_score(y_test, y_prob_lr):.4f}")
+    print(classification_report(y_test, y_pred_lr))
+    
+    # 4. Train Random Forest
+    print("\nTraining Random Forest...")
+    rf_pipeline = Pipeline(steps=[('preprocessor', preprocessor),
+                                   ('classifier', RandomForestClassifier(random_state=42, n_estimators=100))])
+    rf_pipeline.fit(X_train, y_train)
+    
+    y_pred_rf = rf_pipeline.predict(X_test)
+    y_prob_rf = rf_pipeline.predict_proba(X_test)[:, 1]
+    
+    print("Random Forest Results:")
+    print(f"Accuracy: {accuracy_score(y_test, y_pred_rf):.4f}")
+    print(f"ROC-AUC: {roc_auc_score(y_test, y_prob_rf):.4f}")
+    print(classification_report(y_test, y_pred_rf))
+    
+    # 5. Feature Importance (Random Forest)
+    print("\nFeature Importance (Random Forest):")
+    feature_names = (numerical_cols + 
+                     list(rf_pipeline.named_steps['preprocessor']
+                          .named_transformers_['cat']
+                          .get_feature_names_out(categorical_cols)))
+    
+    importances = rf_pipeline.named_steps['classifier'].feature_importances_
+    feature_imp_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
+    feature_imp_df = feature_imp_df.sort_values(by='Importance', ascending=False)
+    
+    print(feature_imp_df.head(10))
+    
+    # Save Feature Importance Plot
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x='Importance', y='Feature', data=feature_imp_df.head(10))
+    plt.title('Top 10 Feature Importances (Random Forest)')
+    plt.tight_layout()
+    plt.savefig('feature_importance.png')
+    print("\nFeature importance plot saved to feature_importance.png")
+    
+    # 6. Save Model
+    import joblib
+    joblib.dump(rf_pipeline, 'student_credit_model.joblib')
+    print("Model saved to student_credit_model.joblib")
+
+if __name__ == "__main__":
+    train_and_evaluate()
