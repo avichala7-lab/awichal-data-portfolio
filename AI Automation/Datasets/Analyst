@@ -1,0 +1,16 @@
+analyst_id,team,role_level,hourly_cost,avg_reports_per_month_before,avg_reports_per_month_after,automation_adoption_pct,is_champion
+A001,Tax Credits,Analyst,35,20,55,0.9,TRUE
+A002,Tax Credits,Analyst,34,18,50,0.85,TRUE
+A003,Tax Credits,Analyst,33,19,48,0.8,FALSE
+A004,Technical Reports,Sr Analyst,40,22,60,0.95,TRUE
+A005,Technical Reports,Analyst,36,21,50,0.8,FALSE
+A006,Technical Reports,Analyst,35,20,47,0.75,FALSE
+A007,Compliance,Analyst,34,18,40,0.7,FALSE
+A008,Compliance,Sr Analyst,39,19,45,0.8,TRUE
+A009,Data Extraction,Analyst,32,25,65,0.9,TRUE
+A010,Data Extraction,Analyst,31,23,55,0.85,FALSE
+A011,Data Extraction,Analyst,31,24,58,0.88,FALSE
+A012,Client Comms,Analyst,30,30,70,0.92,TRUE
+A013,Client Comms,Analyst,30,28,60,0.85,FALSE
+A014,QA/Formatting,Analyst,32,26,58,0.8,FALSE
+A015,QA/Formatting,Analyst,32,25,55,0.78,FALSE
