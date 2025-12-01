@@ -1,0 +1,17 @@
+┌───────────────────────────────────────────────────────────────┐
+│                 AUTOMATION SCENARIO SIMULATOR                  │
+├───────────────────────────────────────────────────────────────┤
+│ Automation Percentage: [ Slider: 0% --- 25% --- 50% --- 80% ]  │
+│                                                               │
+│ Dynamic Calculations:                                          │
+│   • Hours Saved: XXXX                                          │
+│   • Savings:     XXXX                                          │
+│   • Efficiency:  XX%                                           │
+│                                                               │
+├───────────────────────────────────────────────────────────────┤
+│   [ LINE CHART ]                                               │
+│   Y-Axis: Time Saved                                           │
+│   X-Axis: Automation %                                         │
+│                                                               │
+│   (Graph updates as slider moves)                              │
+└───────────────────────────────────────────────────────────────┘
