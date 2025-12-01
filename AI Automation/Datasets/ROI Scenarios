@@ -1,0 +1,5 @@
+scenario_name,automation_pct,annual_hours_saved,annual_cost_savings,payback_months,notes
+Conservative_30,0.3,45000,650000,8,"Initial rollout with limited workflows and partial adoption"
+Balanced_50,0.5,78000,1150000,5,"Balanced automation across core reporting and data extraction"
+Aggressive_70,0.7,118000,1750000,3.5,"Strong automation focus including QA and client summaries"
+Full_80,0.8,138000,2100000,3.0,"Modeled scenario aligned with actual transformation impact"
